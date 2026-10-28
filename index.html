@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Grafico</title>
+    <!-- Tailwind CSS para un diseño ultra moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+            animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); }
+        }
+        .tope-glow {
+            animation: pulseGlow 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Header Principal -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-layer-group text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white">Simulador Grafico</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span> Sistema Activo
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
+        
+        <!-- Notificación Flotante / Toast para Alertas -->
+        <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+        <!-- Barra Lateral de Estructuras -->
+        <aside class="lg:col-span-1 space-y-3">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2">Estructuras de Datos</h2>
+            <nav class="space-y-2">
+                <button onclick="cambiarEstructura('pila')" id="btn-pila" class="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-database w-5"></i>
+                        <span>Pilas</span>
+                    </div>
+                    <span id="badge-pila" class="text-xs bg-blue-500 px-2 py-0.5 rounded-md font-bold text-white">Activo</span>
+                </button>
+
+                <button onclick="cambiarEstructura('simple')" id="btn-simple" class="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent hover:border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-list-ol w-5"></i>
+                        <span>Listas Simples</span>
+                    </div>
+                    <span id="badge-simple" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">Activo</span>
+                </button>
+
+                <button onclick="cambiarEstructura('doble')" id="btn-doble" class="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent hover:border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-arrows-left-right w-5"></i>
+                        <span>Listas Dobles</span>
+                    </div>
+                    <span id="badge-doble" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">Activo</span>
+                </button>
+
+                <button onclick="cambiarEstructura('circular')" id="btn-circular" class="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent hover:border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-rotate w-5"></i>
+                        <span>Listas Circulares</span>
+                    </div>
+                    <span id="badge-circular" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">Activo</span>
+                </button>
+
+                <button onclick="cambiarEstructura('cola')" id="btn-cola" class="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent hover:border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-people-line w-5"></i>
+                        <span>Colas</span>
+                    </div>
+                    <span id="badge-cola" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-bold">Activo</span>
+                </button>
+            </nav>
+
+            <!-- Panel de Estadísticas Dinámicas -->
+            <div class="glass-panel rounded-2xl p-4 mt-6 space-y-3">
+                <h3 id="titulo-estado" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Estado</h3>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400" id="label-capacidad">Límite:</span>
+                    <span class="font-bold text-white" id="val-capacidad">5 Elementos</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Actuales:</span>
+                    <span id="contador-elementos" class="font-bold text-blue-400">0 / 5</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden" id="contenedor-barra">
+                    <div id="barra-progreso" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Panel Central de Operaciones y Gráficos -->
+        <section class="lg:col-span-3 space-y-6">
+            
+            <!-- Vista de Pila Activa -->
+            <div id="vista-pila" class="space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bars-staggered text-blue-500"></i> Panel de Control de Pilas
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Apilar</label>
+                            <input type="number" id="input-push" placeholder="Valor (ej: 42)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500">
+                            <button onclick="apilar()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all shadow-md">Apilar</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <label class="text-xs font-medium text-slate-300">Desapilar</label>
+                            </div>
+                            <button onclick="desapilar()" class="w-full bg-rose-600/80 hover:bg-rose-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Desapilar</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Posición</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="input-pos-idx" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="input-pos-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="adicionarPorPosicionPila()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Valor</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="input-val-buscar" placeholder="Tras" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="input-val-nuevo" placeholder="Nuevo" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="adicionarPorValorPila()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Tras</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar por Posición</label>
+                            <input type="number" id="input-del-pos" placeholder="Posición" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="eliminarPorPosicionPila()" class="w-full bg-amber-600/80 hover:bg-amber-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Borrar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar por Valor</label>
+                            <input type="number" id="input-del-val" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="eliminarPorValorPila()" class="w-full bg-amber-600/80 hover:bg-amber-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Borrar Val</button>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Acción Rápida</label>
+                            <button onclick="reiniciarPila()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-lg transition-all border border-slate-700">Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center min-h-[380px] justify-between relative overflow-hidden">
+                    <div id="contenedor-pila" class="w-full max-w-sm flex flex-col-reverse items-center justify-center gap-3 my-12 min-h-[220px] px-4 py-6 bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                        <div id="pila-vacia-msg" class="text-center text-slate-500 text-sm py-10">
+                            <i class="fa-solid fa-box-open text-3xl mb-2 block"></i>
+                            La pila está vacía. ¡Empieza a apilar elementos!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Lista Simple Activa -->
+            <div id="vista-simple" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-blue-500"></i> Panel de Control - Lista Simple
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Inicio</label>
+                            <input type="number" id="ls-input-inicio" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="lsAdicionarInicio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Inicio</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Final</label>
+                            <input type="number" id="ls-input-final" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="lsAdicionarFinal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Final</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Posición</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ls-pos-idx" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ls-pos-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="lsAdicionarPorPosicion()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Valor</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ls-val-buscar" placeholder="Antes" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ls-val-nuevo" placeholder="Nuevo" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="lsAdicionarPorValor()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Valor</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Extremos</label>
+                            <div class="flex gap-2">
+                                <button onclick="lsEliminarInicio()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Inicio</button>
+                                <button onclick="lsEliminarFinal()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Final</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Específico</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ls-del-pos" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ls-del-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="lsEliminarPorPosicion()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Pos</button>
+                                <button onclick="lsEliminarPorValor()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Val</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Acción Rápida</label>
+                            <button onclick="reiniciarListaSimple()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-lg transition-all border border-slate-700">Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center min-h-[380px] justify-between relative overflow-hidden">
+                    <div id="contenedor-lista-simple" class="w-full flex items-center justify-start gap-4 overflow-x-auto my-14 min-h-[200px] px-4 py-6 bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                        <div id="lista-vacia-msg" class="text-center text-slate-500 text-sm py-10 w-full">
+                            <i class="fa-solid fa-link-slash text-3xl mb-2 block"></i>
+                            La lista simple está vacía. ¡Agrega un nodo!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Lista Doble Activa -->
+            <div id="vista-doble" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-left-right text-blue-500"></i> Panel de Control - Lista Doble
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Inicio</label>
+                            <input type="number" id="ld-input-inicio" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="ldAdicionarInicio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Inicio</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Final</label>
+                            <input type="number" id="ld-input-final" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="ldAdicionarFinal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Final</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Posición</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ld-pos-idx" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ld-pos-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="ldAdicionarPorPosicion()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Valor</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ld-val-buscar" placeholder="Antes" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ld-val-nuevo" placeholder="Nuevo" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="ldAdicionarPorValor()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Valor</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Extremos</label>
+                            <div class="flex gap-2">
+                                <button onclick="ldEliminarInicio()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Inicio</button>
+                                <button onclick="ldEliminarFinal()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Final</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Específico</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="ld-del-pos" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="ld-del-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="ldEliminarPorPosicion()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Pos</button>
+                                <button onclick="ldEliminarPorValor()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Val</button>
+                            </div>
+                        </div>
+                       
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Acción Rápida</label>
+                            <button onclick="reiniciarListaDoble()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-lg transition-all border border-slate-700">Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center min-h-[380px] justify-between relative overflow-hidden">
+                    <div id="contenedor-lista-doble" class="w-full flex items-center justify-start gap-4 overflow-x-auto my-14 min-h-[200px] px-4 py-6 bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                        <div id="lista-d-vacia-msg" class="text-center text-slate-500 text-sm py-10 w-full">
+                            <i class="fa-solid fa-arrows-left-right text-3xl mb-2 block"></i>
+                            La lista doble está vacía. ¡Agrega tu primer nodo!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Lista Circular Activa -->
+            <div id="vista-circular" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-rotate text-blue-500"></i> Panel de Control - Listas Circulares
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Inicio</label>
+                            <input type="number" id="lc-input-inicio" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="lcAdicionarInicio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Inicio</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar Final</label>
+                            <input type="number" id="lc-input-final" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="lcAdicionarFinal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Final</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Posición</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="lc-pos-idx" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="lc-pos-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="lcAdicionarPorPosicion()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Valor</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="lc-val-buscar" placeholder="Antes" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="lc-val-nuevo" placeholder="Nuevo" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="lcAdicionarPorValor()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Valor</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Extremos</label>
+                            <div class="flex gap-2">
+                                <button onclick="lcEliminarInicio()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Inicio</button>
+                                <button onclick="lcEliminarFinal()" class="w-1/2 bg-rose-600/80 hover:bg-rose-600 text-white text-xs py-1.5 rounded-lg">Final</button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar Específico</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="lc-del-pos" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="lc-del-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="lcEliminarPorPosicion()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Pos</button>
+                                <button onclick="lcEliminarPorValor()" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white text-xs py-1.5 rounded-lg">Val</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Acción Rápida</label>
+                            <button onclick="reiniciarListaCircular()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-lg transition-all border border-slate-700">Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center min-h-[380px] justify-between relative overflow-hidden">
+                    <div id="contenedor-lista-circular" class="w-full flex items-center justify-start gap-4 overflow-x-auto my-14 min-h-[200px] px-4 py-6 bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                        <div id="lista-c-vacia-msg" class="text-center text-slate-500 text-sm py-10 w-full">
+                            <i class="fa-solid fa-rotate text-3xl mb-2 block"></i>
+                            La lista circular está vacía. ¡Agrega tu primer nodo!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Cola Activa -->
+            <div id="vista-cola" class="hidden space-y-6">
+                <div class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-people-line text-blue-500"></i> Panel de Control - Colas
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Encolar</label>
+                            <input type="number" id="cola-input-push" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="colaEncolar()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Encolar</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <label class="text-xs font-medium text-slate-300">Desencolar</label>
+                            </div>
+                            <button onclick="colaDesencolar()" class="w-full bg-rose-600/80 hover:bg-rose-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Desencolar</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Posición</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="cola-pos-idx" placeholder="Pos" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="cola-pos-val" placeholder="Val" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="colaAdicionarPorPosicion()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Adicionar por Valor</label>
+                            <div class="flex gap-1">
+                                <input type="number" id="cola-val-buscar" placeholder="Buscar" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="number" id="cola-val-nuevo" placeholder="Nuevo" class="w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                            <button onclick="colaAdicionarPorValor()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs py-2 rounded-lg transition-all">Insertar Tras</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar por Posición</label>
+                            <input type="number" id="cola-del-pos" placeholder="Posición" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="colaEliminarPorPosicion()" class="w-full bg-amber-600/80 hover:bg-amber-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Borrar Pos</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <label class="text-xs font-medium text-slate-300">Eliminar por Valor</label>
+                            <input type="number" id="cola-del-val" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white">
+                            <button onclick="colaEliminarPorValor()" class="w-full bg-amber-600/80 hover:bg-amber-600 text-white font-medium text-xs py-2 rounded-lg transition-all">Borrar Val</button>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2 flex flex-col justify-between">
+                            <label class="text-xs font-medium text-slate-300">Acción Rápida</label>
+                            <button onclick="reiniciarCola()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-lg transition-all border border-slate-700">Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col items-center min-h-[380px] justify-between relative overflow-hidden">
+                    <div id="contenedor-cola" class="w-full flex items-center justify-start gap-4 overflow-x-auto my-14 min-h-[200px] px-4 py-6 bg-slate-900/40 rounded-2xl border border-slate-800/80">
+                        <div id="cola-vacia-msg" class="text-center text-slate-500 text-sm py-10 w-full">
+                            <i class="fa-solid fa-people-line text-3xl mb-2 block"></i>
+                            La cola está vacía. ¡Encola un elemento!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista temporal para futuras estructuras -->
+            <div id="vista-futura" class="hidden glass-panel rounded-2xl p-12 text-center space-y-4">
+                <div class="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-blue-500/20">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h3 id="titulo-futuro" class="text-xl font-bold text-white">Módulo en Desarrollo</h3>
+                <p class="text-slate-400 text-sm max-w-md mx-auto">Esta estructura de datos estará disponible próximamente en el simulador interactivo.</p>
+                <button onclick="cambiarEstructura('pila')" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-500 transition-all">Volver</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Script de Lógica -->
+    <script>
+        function mostrarToast(mensaje, tipo = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = tipo === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' : 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200';
+            const icon = tipo === 'error' ? 'fa-triangle-exclamation text-rose-400' : 'fa-circle-check text-emerald-400';
+
+            toast.className = `pointer-events-auto flex items-center space-x-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl animate-slide-in transition-all duration-300 ${bgColor}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><div class="text-sm font-semibold tracking-wide">${mensaje}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // --- 1. LÓGICA DE PILA ---
+        let pila = [];
+        const CAPACIDAD_MAXIMA_PILA = 5;
+
+        function actualizarEstadisticasPila() {
+            const size = pila.length;
+            document.getElementById('contador-elementos').innerText = `${size} / ${CAPACIDAD_MAXIMA_PILA}`;
+            document.getElementById('barra-progreso').style.width = `${(size / CAPACIDAD_MAXIMA_PILA) * 100}%`;
+        }
+
+        function renderizarPila() {
+            const contenedor = document.getElementById('contenedor-pila');
+            contenedor.innerHTML = '';
+            if (pila.length === 0) {
+                contenedor.innerHTML = `<div class="text-center text-slate-500 text-sm py-10"><i class="fa-solid fa-box-open text-3xl mb-2 block"></i>La pila está vacía. ¡Empieza a apilar elementos!</div>`;
+                actualizarEstadisticasPila();
+                return;
+            }
+            for (let i = pila.length - 1; i >= 0; i--) {
+                const valor = pila[i];
+                const esTope = (i === pila.length - 1);
+                const nodo = document.createElement('div');
+                nodo.className = `w-4/5 max-w-xs py-3 px-4 rounded-xl flex items-center justify-between transition-all duration-300 animate-slide-in shadow-lg border ${esTope ? 'bg-blue-600/30 border-blue-500/80 text-white tope-glow' : 'bg-slate-800/80 border-slate-700 text-slate-200'}`;
+                nodo.innerHTML = `<div class="flex items-center space-x-3"><span class="w-6 h-6 rounded-lg bg-slate-900/60 text-xs font-bold flex items-center justify-center text-slate-400">${i}</span><span class="font-bold text-base tracking-wide">${valor}</span></div>${esTope ? '<span class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-md font-extrabold uppercase tracking-wider">TOP</span>' : ''}`;
+                contenedor.appendChild(nodo);
+            }
+            actualizarEstadisticasPila();
+        }
+
+        function apilar() {
+            const val = document.getElementById('input-push').value.trim();
+            if (val === '') { mostrarToast('Ingresa un número válido', 'error'); return; }
+            if (pila.length >= CAPACIDAD_MAXIMA_PILA) { mostrarToast('¡Pila Llena! Máx 5', 'error'); return; }
+            let num = parseInt(val);
+            pila.push(num);
+            document.getElementById('input-push').value = '';
+            mostrarToast(`Número ${num} apilado con éxito`, 'success');
+            renderizarPila();
+        }
+
+        function desapilar() {
+            if (pila.length === 0) { mostrarToast('La pila está vacía', 'error'); return; }
+            let eliminado = pila.pop();
+            mostrarToast(`Se desapiló: ${eliminado}`, 'success');
+            renderizarPila();
+        }
+
+        function mostrarPila() {
+            if (pila.length === 0) mostrarToast('La pila está vacía', 'error');
+            else mostrarToast(`Elementos (Base a Tope): [${pila.join(', ')}]`, 'success');
+        }
+
+        function adicionarPorPosicionPila() {
+            let pos = parseInt(document.getElementById('input-pos-idx').value);
+            let val = parseInt(document.getElementById('input-pos-val').value);
+            if (isNaN(pos) || isNaN(val)) { mostrarToast('Ingresa posición y valor válidos', 'error'); return; }
+            if (pila.length >= CAPACIDAD_MAXIMA_PILA) { mostrarToast('Pila Llena', 'error'); return; }
+            if (pos >= 0 && pos <= pila.length) {
+                pila.splice(pos, 0, val);
+                document.getElementById('input-pos-idx').value = '';
+                document.getElementById('input-pos-val').value = '';
+                mostrarToast(`Número insertado en posición ${pos}`, 'success');
+                renderizarPila();
+            } else { mostrarToast('Posición no válida', 'error'); }
+        }
+
+        function adicionarPorValorPila() {
+            let buscar = parseInt(document.getElementById('input-val-buscar').value);
+            let nuevo = parseInt(document.getElementById('input-val-nuevo').value);
+            if (isNaN(buscar) || isNaN(nuevo)) { mostrarToast('Ingresa ambos valores', 'error'); return; }
+            if (pila.length >= CAPACIDAD_MAXIMA_PILA) { mostrarToast('Pila Llena', 'error'); return; }
+            let idx = pila.indexOf(buscar);
+            if (idx !== -1) {
+                pila.splice(idx + 1, 0, nuevo);
+                document.getElementById('input-val-buscar').value = '';
+                document.getElementById('input-val-nuevo').value = '';
+                mostrarToast('Número agregado con éxito', 'success');
+                renderizarPila();
+            } else { mostrarToast(`Número ${buscar} no encontrado`, 'error'); }
+        }
+
+        function eliminarPorPosicionPila() {
+            let pos = parseInt(document.getElementById('input-del-pos').value);
+            if (isNaN(pos) || pos < 0 || pos >= pila.length) { mostrarToast('Posición no existe', 'error'); return; }
+            let eliminado = pila.splice(pos, 1);
+            document.getElementById('input-del-pos').value = '';
+            mostrarToast(`Elemento ${eliminado} borrado`, 'success');
+            renderizarPila();
+        }
+
+        function eliminarPorValorPila() {
+            let val = parseInt(document.getElementById('input-del-val').value);
+            let idx = pila.indexOf(val);
+            if (idx !== -1) {
+                pila.splice(idx, 1);
+                document.getElementById('input-del-val').value = '';
+                mostrarToast(`Número ${val} eliminado`, 'success');
+                renderizarPila();
+            } else { mostrarToast(`Número ${val} no existe`, 'error'); }
+        }
+
+        function reiniciarPila() {
+            pila = [];
+            mostrarToast('Pila reiniciada', 'info');
+            renderizarPila();
+        }
+
+
+        // --- 2. LÓGICA DE LISTA SIMPLE ---
+        class NodoLS {
+            constructor(dato) {
+                this.Info = dato;
+                this.Sig = null;
+            }
+        }
+
+        class ListaSimpleJava {
+            constructor() {
+                this.CAB = null;
+                this.ULT = null;
+                this.Con = 0;
+            }
+            Adicionar_Inicio(valor) {
+                let AUX = new NodoLS(valor);
+                if (this.CAB === null) { this.CAB = AUX; this.ULT = AUX; }
+                else { AUX.Sig = this.CAB; this.CAB = AUX; }
+                this.Con++;
+            }
+            Adicionar_Final(valor) {
+                let AUX = new NodoLS(valor);
+                if (this.CAB === null) { this.CAB = AUX; this.ULT = AUX; }
+                else { this.ULT.Sig = AUX; this.ULT = AUX; }
+                this.Con++;
+            }
+            Adicionar_Por_Posicion(pos, valor) {
+                if (pos === 1) { this.Adicionar_Inicio(valor); return true; }
+                if (pos === this.Con + 1) { this.Adicionar_Final(valor); return true; }
+                if (pos < 1 || pos > this.Con + 1) return false;
+                let AUX = new NodoLS(valor);
+                let P = this.CAB;
+                let i = 1;
+                while (i < pos - 1) { P = P.Sig; i++; }
+                AUX.Sig = P.Sig;
+                P.Sig = AUX;
+                this.Con++;
+                return true;
+            }
+            Adicionar_Por_Valor(Valor, nuevoValor) {
+                let P = this.CAB;
+                let Q = null;
+                while (P !== null && P.Info !== Valor) { Q = P; P = P.Sig; }
+                if (P !== null) {
+                    let AUX = new NodoLS(nuevoValor);
+                    if (Q === null) { AUX.Sig = this.CAB; this.CAB = AUX; }
+                    else { Q.Sig = AUX; AUX.Sig = P; }
+                    this.Con++;
+                    return true;
+                }
+                return false;
+            }
+            Eliminar_Inicio() {
+                if (this.CAB !== null) {
+                    this.CAB = this.CAB.Sig;
+                    if (this.CAB === null) this.ULT = null;
+                    this.Con--;
+                    return true;
+                }
+                return false;
+            }
+            Eliminar_Final() {
+                if (this.CAB === null) return false;
+                if (this.CAB === this.ULT) { this.CAB = null; this.ULT = null; }
+                else {
+                    let P = this.CAB;
+                    while (P.Sig !== this.ULT) { P = P.Sig; }
+                    this.ULT = P;
+                    this.ULT.Sig = null;
+                }
+                this.Con--;
+                return true;
+            }
+            Eliminar_Por_Posicion(pos) {
+                if (pos < 1 || pos > this.Con) return false;
+                if (pos === 1) return this.Eliminar_Inicio();
+                let P = this.CAB;
+                let Q = null;
+                let i = 1;
+                while (i < pos) { Q = P; P = P.Sig; i++; }
+                Q.Sig = P.Sig;
+                if (P === this.ULT) this.ULT = Q;
+                this.Con--;
+                return true;
+            }
+            Eliminar_Por_Valor(valor) {
+                let P = this.CAB;
+                let Q = null;
+                while (P !== null && P.Info !== valor) { Q = P; P = P.Sig; }
+                if (P !== null) {
+                    if (Q === null) this.CAB = P.Sig;
+                    else Q.Sig = P.Sig;
+                    if (P === this.ULT) this.ULT = Q;
+                    this.Con--;
+                    return true;
+                }
+                return false;
+            }
+            Reiniciar() {
+                this.CAB = null;
+                this.ULT = null;
+                this.Con = 0;
+            }
+        }
+
+        let miListaSimple = new ListaSimpleJava();
+
+        function renderizarListaSimple() {
+            const contenedor = document.getElementById('contenedor-lista-simple');
+            contenedor.innerHTML = '';
+            document.getElementById('contador-elementos').innerText = `${miListaSimple.Con} nodos`;
+            document.getElementById('barra-progreso').style.width = `${Math.min(miListaSimple.Con * 20, 100)}%`;
+
+            if (miListaSimple.CAB === null) {
+                contenedor.innerHTML = `<div class="text-center text-slate-500 text-sm py-10 w-full"><i class="fa-solid fa-link-slash text-3xl mb-2 block"></i>La lista simple está vacía. ¡Agrega un nodo!</div>`;
+                return;
+            }
+
+            let P = miListaSimple.CAB;
+            let idx = 1;
+            while (P !== null) {
+                const nodoDiv = document.createElement('div');
+                nodoDiv.className = "flex items-center space-x-3 animate-slide-in flex-shrink-0";
+                nodoDiv.innerHTML = `
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3 shadow-lg flex flex-col min-w-[110px]">
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-700/60 pb-1 mb-1">
+                            <span>Pos: ${idx}</span>
+                            <span class="text-emerald-400 font-bold">${P === miListaSimple.CAB ? 'CAB' : (P === miListaSimple.ULT ? 'ULT' : '')}</span>
+                        </div>
+                        <div class="text-center py-2">
+                            <span class="text-2xl font-bold text-white">${P.Info}</span>
+                        </div>
+                    </div>
+                    ${P.Sig !== null ? '<i class="fa-solid fa-arrow-right text-slate-600 text-sm"></i>' : '<span class="text-xs font-mono text-rose-400 font-bold ml-1">-> null</span>'}
+                `;
+                contenedor.appendChild(nodoDiv);
+                P = P.Sig;
+                idx++;
+            }
+        }
+
+        function lsAdicionarInicio() {
+            let val = parseInt(document.getElementById('ls-input-inicio').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaSimple.Adicionar_Inicio(val);
+            document.getElementById('ls-input-inicio').value = '';
+            mostrarToast(`Elemento ${val} adicionado al inicio`, 'success');
+            renderizarListaSimple();
+        }
+        function lsAdicionarFinal() {
+            let val = parseInt(document.getElementById('ls-input-final').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaSimple.Adicionar_Final(val);
+            document.getElementById('ls-input-final').value = '';
+            mostrarToast(`Elemento ${val} adicionado al final`, 'success');
+            renderizarListaSimple();
+        }
+        function lsAdicionarPorPosicion() {
+            let pos = parseInt(document.getElementById('ls-pos-idx').value);
+            let val = parseInt(document.getElementById('ls-pos-val').value);
+            if (isNaN(pos) || isNaN(val)) { mostrarToast('Ingresa posición y valor', 'error'); return; }
+            if (miListaSimple.Adicionar_Por_Posicion(pos, val)) {
+                document.getElementById('ls-pos-idx').value = '';
+                document.getElementById('ls-pos-val').value = '';
+                mostrarToast(`Insertado en posición ${pos}`, 'success');
+                renderizarListaSimple();
+            } else { mostrarToast('Posición fuera de rango', 'error'); }
+        }
+        function lsAdicionarPorValor() {
+            let buscar = parseInt(document.getElementById('ls-val-buscar').value);
+            let nuevo = parseInt(document.getElementById('ls-val-nuevo').value);
+            if (isNaN(buscar) || isNaN(nuevo)) { mostrarToast('Ingresa ambos valores', 'error'); return; }
+            if (miListaSimple.Adicionar_Por_Valor(buscar, nuevo)) {
+                document.getElementById('ls-val-buscar').value = '';
+                document.getElementById('ls-val-nuevo').value = '';
+                mostrarToast('Nodo insertado exitosamente', 'success');
+                renderizarListaSimple();
+            } else { mostrarToast(`Valor ${buscar} no encontrado`, 'error'); }
+        }
+        function lsEliminarInicio() {
+            if (miListaSimple.Eliminar_Inicio()) { mostrarToast('Primer nodo eliminado', 'success'); renderizarListaSimple(); }
+            else { mostrarToast('La lista está vacía', 'error'); }
+        }
+        function lsEliminarFinal() {
+            if (miListaSimple.Eliminar_Final()) { mostrarToast('Último nodo eliminado', 'success'); renderizarListaSimple(); }
+            else { mostrarToast('La lista está vacía', 'error'); }
+        }
+        function lsEliminarPorPosicion() {
+            let pos = parseInt(document.getElementById('ls-del-pos').value);
+            if (isNaN(pos)) { mostrarToast('Ingresa una posición', 'error'); return; }
+            if (miListaSimple.Eliminar_Por_Posicion(pos)) {
+                document.getElementById('ls-del-pos').value = '';
+                mostrarToast(`Nodo en posición ${pos} eliminado`, 'success');
+                renderizarListaSimple();
+            } else { mostrarToast('Posición no válida', 'error'); }
+        }
+        function lsEliminarPorValor() {
+            let val = parseInt(document.getElementById('ls-del-val').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor', 'error'); return; }
+            if (miListaSimple.Eliminar_Por_Valor(val)) {
+                document.getElementById('ls-del-val').value = '';
+                mostrarToast(`Nodo con valor ${val} eliminado`, 'success');
+                renderizarListaSimple();
+            } else { mostrarToast(`Valor ${val} no encontrado`, 'error'); }
+        }
+        function lsMostrar() {
+            if (miListaSimple.CAB === null) {
+                mostrarToast('La lista está vacía', 'error');
+            } else {
+                let elems = [];
+                let P = miListaSimple.CAB;
+                while(P !== null) { elems.push(P.Info); P = P.Sig; }
+                mostrarToast(`Elementos: [${elems.join(', ')}]`, 'success');
+            }
+        }
+        function reiniciarListaSimple() {
+            miListaSimple.Reiniciar();
+            mostrarToast('Lista simple reiniciada', 'info');
+            renderizarListaSimple();
+        }
+
+
+        // --- 3. LÓGICA DE LISTA DOBLE (Basada en tus métodos) ---
+        class NodoLD {
+            constructor(dato) {
+                this.info = dato;
+                this.sig = null;
+                this.ant = null;
+            }
+        }
+
+        class ListaDobleJava {
+            constructor() {
+                this.cabD = null;
+                this.ultD = null;
+                this.cont = 0;
+            }
+
+            // 1. Ad x Inicio()
+            Ad_x_Inicio(val) {
+                let auxD = new NodoLD(val);
+                if (this.cabD === null) {
+                    this.cabD = auxD;
+                    this.ultD = auxD;
+                    auxD.sig = null;
+                    auxD.ant = null;
+                } else {
+                    auxD.sig = this.cabD;
+                    auxD.ant = null;
+                    this.cabD.ant = auxD;
+                    this.cabD = auxD;
+                }
+                this.cont++;
+            }
+
+            // 2. Ad x Final()
+            Ad_x_Final(val) {
+                let auxD = new NodoLD(val);
+                if (this.cabD === null) {
+                    this.cabD = auxD;
+                    this.ultD = auxD;
+                    auxD.sig = null;
+                    auxD.ant = null;
+                } else {
+                    this.ultD.sig = auxD;
+                    auxD.ant = this.ultD;
+                    auxD.sig = null;
+                    this.ultD = auxD;
+                }
+                this.cont++;
+            }
+
+            // 4. El x I() - Eliminar por el inicio
+            El_x_I() {
+                if (this.cabD === null) {
+                    return null; // lista vacia
+                } else if (this.cabD.sig === null) {
+                    let el = this.cabD.info;
+                    this.cabD = null;
+                    this.ultD = null;
+                    this.cont--;
+                    return el;
+                } else {
+                    let el = this.cabD.info;
+                    this.cabD = this.cabD.sig;
+                    this.cabD.ant = null;
+                    this.cont--;
+                    return el;
+                }
+            }
+
+            // 5. El x F() - Eliminar por el final
+            El_x_F() {
+                if (this.cabD === null) {
+                    return null; // lista vacia
+                } else if (this.cabD.sig === null) {
+                    let el = this.cabD.info;
+                    this.cabD = null;
+                    this.ultD = null;
+                    this.cont--;
+                    return el;
+                } else {
+                    let el = this.ultD.info;
+                    this.ultD = this.ultD.ant;
+                    this.ultD.sig = null;
+                    this.cont--;
+                    return el;
+                }
+            }
+
+            // 6. Add x Val() - Adicionar por Valor
+            Add_x_Val(valorBusqueda, nuevoValor) {
+                if (this.cabD === null) {
+                    return { status: "vacia" };
+                } else {
+                    if (this.cabD.info === valorBusqueda) {
+                        this.Ad_x_Inicio(nuevoValor);
+                        return { status: "ok" };
+                    } else {
+                        let PD = this.cabD;
+                        while (PD !== null && PD.info !== valorBusqueda) {
+                            PD = PD.sig;
+                        }
+                        if (PD === null) {
+                            return { status: "no_encontrado" };
+                        } else {
+                            let QD = PD.ant;
+                            let auxD = new NodoLD(nuevoValor);
+                            QD.sig = auxD;
+                            auxD.ant = QD;
+                            auxD.sig = PD;
+                            PD.ant = auxD;
+                            this.cont++;
+                            return { status: "ok" };
+                        }
+                    }
+                }
+            }
+
+            // 7. Adicionar por Posición
+            Adicionar_por_posicion(pos, valor) {
+                if (pos === 1) {
+                    this.Ad_x_Inicio(valor);
+                    return { status: "ok" };
+                } else {
+                    if (this.cont === 0 || pos > this.cont + 1 || pos < 1) {
+                        return { status: "fuera" };
+                    } else {
+                        if (pos === this.cont + 1) {
+                            this.Ad_x_Final(valor);
+                            return { status: "ok" };
+                        } else {
+                            let PD = this.cabD;
+                            for (let i = 1; i < pos; i++) {
+                                PD = PD.sig;
+                            }
+                            let QD = PD.ant;
+                            let auxD = new NodoLD(valor);
+                            QD.sig = auxD;
+                            auxD.ant = QD;
+                            auxD.sig = PD;
+                            PD.ant = auxD;
+                            this.cont++;
+                            return { status: "ok" };
+                        }
+                    }
+                }
+            }
+
+            // 8. Eliminar por Valor
+            El_x_Valor(valor) {
+                if (this.cabD === null) {
+                    return { status: "vacia" };
+                } else {
+                    if (this.cabD.info === valor) {
+                        let el = this.El_x_I();
+                        return { status: "ok", val: el };
+                    } else if (this.ultD.info === valor) {
+                        let el = this.El_x_F();
+                        return { status: "ok", val: el };
+                    } else {
+                        let PD = this.cabD;
+                        while (PD !== null && PD.info !== valor) {
+                            PD = PD.sig;
+                        }
+                        if (PD === null) {
+                            return { status: "no_encontrado" };
+                        } else {
+                            let el = PD.info;
+                            let QD = PD.ant;
+                            QD.sig = PD.sig;
+                            PD.sig.ant = QD;
+                            this.cont--;
+                            return { status: "ok", val: el };
+                        }
+                    }
+                }
+            }
+
+            // 9. Eliminar por Posición
+            El_x_Posicion(pos) {
+                if (this.cabD === null) {
+                    return { status: "vacia" };
+                } else if (pos === 1) {
+                    let el = this.El_x_I();
+                    return { status: "ok", val: el };
+                } else if (pos > this.cont || pos < 1) {
+                    return { status: "fuera" };
+                } else if (pos === this.cont) {
+                    let el = this.El_x_F();
+                    return { status: "ok", val: el };
+                } else {
+                    let PD = this.cabD;
+                    for (let i = 1; i < pos; i++) {
+                        PD = PD.sig;
+                    }
+                    let el = PD.info;
+                    let QD = PD.ant;
+                    QD.sig = PD.sig;
+                    PD.sig.ant = QD;
+                    this.cont--;
+                    return { status: "ok", val: el };
+                }
+            }
+
+            // 3. Mostrar()
+            Mostrar() {
+                if (this.cabD === null) return [];
+                let elems = [];
+                let PD = this.cabD;
+                while (PD !== null) {
+                    elems.push(PD.info);
+                    PD = PD.sig;
+                }
+                return elems;
+            }
+
+            Reiniciar() {
+                this.cabD = null;
+                this.ultD = null;
+                this.cont = 0;
+            }
+        }
+
+        let miListaDoble = new ListaDobleJava();
+
+        function renderizarListaDoble() {
+            const contenedor = document.getElementById('contenedor-lista-doble');
+            contenedor.innerHTML = '';
+            document.getElementById('contador-elementos').innerText = `${miListaDoble.cont} nodos`;
+            document.getElementById('barra-progreso').style.width = `${Math.min(miListaDoble.cont * 20, 100)}%`;
+
+            if (miListaDoble.cabD === null) {
+                contenedor.innerHTML = `<div class="text-center text-slate-500 text-sm py-10 w-full"><i class="fa-solid fa-arrows-left-right text-3xl mb-2 block"></i>La lista doble está vacía. ¡Agrega tu primer nodo!</div>`;
+                return;
+            }
+
+            let PD = miListaDoble.cabD;
+            let idx = 1;
+            while (PD !== null) {
+                const nodoDiv = document.createElement('div');
+                nodoDiv.className = "flex items-center space-x-3 animate-slide-in flex-shrink-0";
+                nodoDiv.innerHTML = `
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3 shadow-lg flex flex-col min-w-[110px]">
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-700/60 pb-1 mb-1">
+                            <span>Pos: ${idx}</span>
+                            <span class="text-indigo-400 font-bold">${PD === miListaDoble.cabD ? 'cabD' : (PD === miListaDoble.ultD ? 'ultD' : '')}</span>
+                        </div>
+                        <div class="text-center py-2">
+                            <span class="text-2xl font-bold text-white">${PD.info}</span>
+                        </div>
+                    </div>
+                    ${PD.sig !== null ? '<i class="fa-solid fa-arrows-left-right text-blue-400 text-sm"></i>' : '<span class="text-xs font-mono text-rose-400 font-bold ml-1">-> null</span>'}
+                `;
+                contenedor.appendChild(nodoDiv);
+                PD = PD.sig;
+                idx++;
+            }
+        }
+
+        function ldAdicionarInicio() {
+            let val = parseInt(document.getElementById('ld-input-inicio').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaDoble.Ad_x_Inicio(val);
+            document.getElementById('ld-input-inicio').value = '';
+            mostrarToast(`Elemento ${val} adicionado al inicio`, 'success');
+            renderizarListaDoble();
+        }
+
+        function ldAdicionarFinal() {
+            let val = parseInt(document.getElementById('ld-input-final').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaDoble.Ad_x_Final(val);
+            document.getElementById('ld-input-final').value = '';
+            mostrarToast(`Elemento ${val} adicionado al final`, 'success');
+            renderizarListaDoble();
+        }
+
+        function ldAdicionarPorPosicion() {
+            let pos = parseInt(document.getElementById('ld-pos-idx').value);
+            let val = parseInt(document.getElementById('ld-pos-val').value);
+            if (isNaN(pos) || isNaN(val)) { mostrarToast('Ingresa posición y valor', 'error'); return; }
+            let res = miListaDoble.Adicionar_por_posicion(pos, val);
+            if (res.status === "ok") {
+                document.getElementById('ld-pos-idx').value = '';
+                document.getElementById('ld-pos-val').value = '';
+                mostrarToast(`Insertado en posición ${pos}`, 'success');
+                renderizarListaDoble();
+            } else {
+                mostrarToast('Fuera de lugar', 'error');
+            }
+        }
+
+        function ldAdicionarPorValor() {
+            let buscar = parseInt(document.getElementById('ld-val-buscar').value);
+            let nuevo = parseInt(document.getElementById('ld-val-nuevo').value);
+            if (isNaN(buscar) || isNaN(nuevo)) { mostrarToast('Ingresa ambos valores', 'error'); return; }
+            let res = miListaDoble.Add_x_Val(buscar, nuevo);
+            if (res.status === "vacia") mostrarToast('Lista vacía', 'error');
+            else if (res.status === "no_encontrado") mostrarToast('Valor no encontrado', 'error');
+            else {
+                document.getElementById('ld-val-buscar').value = '';
+                document.getElementById('ld-val-nuevo').value = '';
+                mostrarToast('Nodo insertado exitosamente', 'success');
+                renderizarListaDoble();
+            }
+        }
+
+        function ldEliminarInicio() {
+            let res = miListaDoble.El_x_I();
+            if (res === null) mostrarToast('Lista vacía', 'error');
+            else { mostrarToast(`Eliminado: ${res}`, 'success'); renderizarListaDoble(); }
+        }
+
+        function ldEliminarFinal() {
+            let res = miListaDoble.El_x_F();
+            if (res === null) mostrarToast('Lista vacía', 'error');
+            else { mostrarToast(`Eliminado: ${res}`, 'success'); renderizarListaDoble(); }
+        }
+
+        function ldEliminarPorPosicion() {
+            let pos = parseInt(document.getElementById('ld-del-pos').value);
+            if (isNaN(pos)) { mostrarToast('Ingresa una posición', 'error'); return; }
+            let res = miListaDoble.El_x_Posicion(pos);
+            if (res.status === "vacia") mostrarToast('Lista vacía', 'error');
+            else if (res.status === "fuera") mostrarToast('Fuera de lugar', 'error');
+            else {
+                document.getElementById('ld-del-pos').value = '';
+                mostrarToast(`Eliminado: ${res.val}`, 'success');
+                renderizarListaDoble();
+            }
+        }
+
+        function ldEliminarPorValor() {
+            let val = parseInt(document.getElementById('ld-del-val').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor', 'error'); return; }
+            let res = miListaDoble.El_x_Valor(val);
+            if (res.status === "vacia") mostrarToast('Lista vacía', 'error');
+            else if (res.status === "no_encontrado") mostrarToast('Valor no encontrado', 'error');
+            else {
+                document.getElementById('ld-del-val').value = '';
+                mostrarToast(`Eliminado: ${res.val}`, 'success');
+                renderizarListaDoble();
+            }
+        }
+
+        function ldMostrar() {
+            let elems = miListaDoble.Mostrar();
+            if (elems.length === 0) mostrarToast('Lista vacía', 'error');
+            else mostrarToast(`Elementos: [${elems.join(', ')}]`, 'success');
+        }
+
+        function reiniciarListaDoble() {
+            miListaDoble.Reiniciar();
+            mostrarToast('Lista doble reiniciada', 'info');
+            renderizarListaDoble();
+        }
+
+
+        // --- 4. LÓGICA DE LISTA CIRCULAR ---
+        class NodoLC {
+            constructor(dato) {
+                this.Info = dato;
+                this.Sig = null;
+            }
+        }
+
+        class ListaCircularJava {
+            constructor() {
+                this.CAB = null;
+                this.ULT = null;
+                this.Con = 0;
+            }
+            Adicionar_Inicio(valor) {
+                let AUX = new NodoLC(valor);
+                if (this.CAB === null) {
+                    this.CAB = AUX;
+                    this.ULT = AUX;
+                    this.ULT.Sig = this.CAB;
+                } else {
+                    AUX.Sig = this.CAB;
+                    this.CAB = AUX;
+                    this.ULT.Sig = this.CAB;
+                }
+                this.Con++;
+            }
+            Adicionar_Final(valor) {
+                let AUX = new NodoLC(valor);
+                if (this.CAB === null) {
+                    this.CAB = AUX;
+                    this.ULT = AUX;
+                    this.ULT.Sig = this.CAB;
+                } else {
+                    this.ULT.Sig = AUX;
+                    this.ULT = AUX;
+                    this.ULT.Sig = this.CAB;
+                }
+                this.Con++;
+            }
+            Adicionar_Por_Posicion(pos, valor) {
+                if (pos === 1) { this.Adicionar_Inicio(valor); return true; }
+                if (pos === this.Con + 1) { this.Adicionar_Final(valor); return true; }
+                if (pos < 1 || pos > this.Con + 1) return false;
+                let AUX = new NodoLC(valor);
+                let P = this.CAB;
+                let i = 1;
+                while (i < pos - 1) { P = P.Sig; i++; }
+                AUX.Sig = P.Sig;
+                P.Sig = AUX;
+                this.Con++;
+                return true;
+            }
+            Adicionar_Por_Valor(Valor, nuevoValor) {
+                if (this.CAB === null) return false;
+                if (this.CAB.Info === Valor) { this.Adicionar_Inicio(nuevoValor); return true; }
+                let P = this.CAB;
+                let Q = null;
+                let i = 0;
+                do {
+                    Q = P;
+                    P = P.Sig;
+                    i++;
+                    if (P.Info === Valor) break;
+                } while (P !== this.CAB && i < this.Con);
+
+                if (P.Info === Valor) {
+                    let AUX = new NodoLC(nuevoValor);
+                    Q.Sig = AUX;
+                    AUX.Sig = P;
+                    this.Con++;
+                    return true;
+                }
+                return false;
+            }
+            Eliminar_Inicio() {
+                if (this.CAB !== null) {
+                    if (this.CAB === this.ULT) {
+                        this.CAB = null;
+                        this.ULT = null;
+                    } else {
+                        this.CAB = this.CAB.Sig;
+                        this.ULT.Sig = this.CAB;
+                    }
+                    this.Con--;
+                    return true;
+                }
+                return false;
+            }
+            Eliminar_Final() {
+                if (this.CAB === null) return false;
+                if (this.CAB === this.ULT) {
+                    this.CAB = null;
+                    this.ULT = null;
+                } else {
+                    let P = this.CAB;
+                    while (P.Sig !== this.ULT) { P = P.Sig; }
+                    this.ULT = P;
+                    this.ULT.Sig = this.CAB;
+                }
+                this.Con--;
+                return true;
+            }
+            Eliminar_Por_Posicion(pos) {
+                if (this.CAB === null) return false;
+                if (pos === 1) return this.Eliminar_Inicio();
+                if (pos < 1 || pos > this.Con) return false;
+                let P = this.CAB;
+                let Q = null;
+                let i = 1;
+                while (i < pos) { Q = P; P = P.Sig; i++; }
+                Q.Sig = P.Sig;
+                if (P === this.ULT) this.ULT = Q;
+                this.Con--;
+                return true;
+            }
+            Eliminar_Por_Valor(valor) {
+                if (this.CAB === null) return false;
+                let P = this.CAB;
+                let Q = null;
+                let i = 0;
+                let enc = false;
+                do {
+                    if (P.Info === valor) { enc = true; break; }
+                    Q = P;
+                    P = P.Sig;
+                    i++;
+                } while (P !== this.CAB && i < this.Con);
+
+                if (enc) {
+                    if (P === this.CAB) {
+                        return this.Eliminar_Inicio();
+                    } else {
+                        Q.Sig = P.Sig;
+                        if (P === this.ULT) this.ULT = Q;
+                        this.Con--;
+                    }
+                    return true;
+                }
+                return false;
+            }
+            Reiniciar() {
+                this.CAB = null;
+                this.ULT = null;
+                this.Con = 0;
+            }
+        }
+
+        let miListaCircular = new ListaCircularJava();
+
+        function renderizarListaCircular() {
+            const contenedor = document.getElementById('contenedor-lista-circular');
+            contenedor.innerHTML = '';
+            document.getElementById('contador-elementos').innerText = `${miListaCircular.Con} nodos`;
+            document.getElementById('barra-progreso').style.width = `${Math.min(miListaCircular.Con * 20, 100)}%`;
+
+            if (miListaCircular.CAB === null) {
+                contenedor.innerHTML = `<div class="text-center text-slate-500 text-sm py-10 w-full"><i class="fa-solid fa-rotate text-3xl mb-2 block"></i>La lista circular está vacía. ¡Agrega tu primer nodo!</div>`;
+                return;
+            }
+
+            let P = miListaCircular.CAB;
+            let idx = 1;
+            let i = 0;
+            do {
+                const nodoDiv = document.createElement('div');
+                nodoDiv.className = "flex items-center space-x-3 animate-slide-in flex-shrink-0";
+                nodoDiv.innerHTML = `
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3 shadow-lg flex flex-col min-w-[110px]">
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-700/60 pb-1 mb-1">
+                            <span>Pos: ${idx}</span>
+                            <span class="text-blue-400 font-bold">${P === miListaCircular.CAB ? 'CAB' : (P === miListaCircular.ULT ? 'ULT' : '')}</span>
+                        </div>
+                        <div class="text-center py-2">
+                            <span class="text-2xl font-bold text-white">${P.Info}</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-arrow-right text-blue-500 text-sm"></i>
+                `;
+                contenedor.appendChild(nodoDiv);
+                P = P.Sig;
+                idx++;
+                i++;
+            } while (P !== miListaCircular.CAB && i < miListaCircular.Con);
+        }
+
+        function lcAdicionarInicio() {
+            let val = parseInt(document.getElementById('lc-input-inicio').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaCircular.Adicionar_Inicio(val);
+            document.getElementById('lc-input-inicio').value = '';
+            mostrarToast(`Elemento ${val} adicionado al inicio`, 'success');
+            renderizarListaCircular();
+        }
+        function lcAdicionarFinal() {
+            let val = parseInt(document.getElementById('lc-input-final').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor válido', 'error'); return; }
+            miListaCircular.Adicionar_Final(val);
+            document.getElementById('lc-input-final').value = '';
+            mostrarToast(`Elemento ${val} adicionado al final`, 'success');
+            renderizarListaCircular();
+        }
+        function lcAdicionarPorPosicion() {
+            let pos = parseInt(document.getElementById('lc-pos-idx').value);
+            let val = parseInt(document.getElementById('lc-pos-val').value);
+            if (isNaN(pos) || isNaN(val)) { mostrarToast('Ingresa posición y valor', 'error'); return; }
+            if (miListaCircular.Adicionar_Por_Posicion(pos, val)) {
+                document.getElementById('lc-pos-idx').value = '';
+                document.getElementById('lc-pos-val').value = '';
+                mostrarToast(`Insertado en posición ${pos}`, 'success');
+                renderizarListaCircular();
+            } else { mostrarToast('Posición fuera de rango', 'error'); }
+        }
+        function lcAdicionarPorValor() {
+            let buscar = parseInt(document.getElementById('lc-val-buscar').value);
+            let nuevo = parseInt(document.getElementById('lc-val-nuevo').value);
+            if (isNaN(buscar) || isNaN(nuevo)) { mostrarToast('Ingresa ambos valores', 'error'); return; }
+            if (miListaCircular.Adicionar_Por_Valor(buscar, nuevo)) {
+                document.getElementById('lc-val-buscar').value = '';
+                document.getElementById('lc-val-nuevo').value = '';
+                mostrarToast('Nodo insertado exitosamente', 'success');
+                renderizarListaCircular();
+            } else { mostrarToast(`Valor ${buscar} no encontrado`, 'error'); }
+        }
+        function lcEliminarInicio() {
+            if (miListaCircular.Eliminar_Inicio()) { mostrarToast('Primer nodo eliminado', 'success'); renderizarListaCircular(); }
+            else { mostrarToast('La lista está vacía', 'error'); }
+        }
+        function lcEliminarFinal() {
+            if (miListaCircular.Eliminar_Final()) { mostrarToast('Último nodo eliminado', 'success'); renderizarListaCircular(); }
+            else { mostrarToast('La lista está vacía', 'error'); }
+        }
+        function lcEliminarPorPosicion() {
+            let pos = parseInt(document.getElementById('lc-del-pos').value);
+            if (isNaN(pos)) { mostrarToast('Ingresa una posición', 'error'); return; }
+            if (miListaCircular.Eliminar_Por_Posicion(pos)) {
+                document.getElementById('lc-del-pos').value = '';
+                mostrarToast(`Nodo en posición ${pos} eliminado`, 'success');
+                renderizarListaCircular();
+            } else { mostrarToast('Posición no válida', 'error'); }
+        }
+        function lcEliminarPorValor() {
+            let val = parseInt(document.getElementById('lc-del-val').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un valor', 'error'); return; }
+            if (miListaCircular.Eliminar_Por_Valor(val)) {
+                document.getElementById('lc-del-val').value = '';
+                mostrarToast(`Nodo con valor ${val} eliminado`, 'success');
+                renderizarListaCircular();
+            } else { mostrarToast(`Valor ${val} no encontrado`, 'error'); }
+        }
+        function lcMostrar() {
+            if (miListaCircular.CAB === null) {
+                mostrarToast('La lista está vacía', 'error');
+            } else {
+                let elems = [];
+                let P = miListaCircular.CAB;
+                let i = 0;
+                do {
+                    elems.push(P.Info);
+                    P = P.Sig;
+                    i++;
+                } while(P !== miListaCircular.CAB && i < miListaCircular.Con);
+                mostrarToast(`Elementos: [${elems.join(', ')}]`, 'success');
+            }
+        }
+        function reiniciarListaCircular() {
+            miListaCircular.Reiniciar();
+            mostrarToast('Lista circular reiniciada', 'info');
+            renderizarListaCircular();
+        }
+
+
+        // --- 5. LÓGICA DE COLA (QUEUE / LINKEDLIST) ---
+        let cola = [];
+        const CAPACIDAD_MAXIMA_COLA = 5;
+
+        function actualizarEstadisticasCola() {
+            const size = cola.length;
+            document.getElementById('contador-elementos').innerText = `${size} / ${CAPACIDAD_MAXIMA_COLA}`;
+            document.getElementById('barra-progreso').style.width = `${(size / CAPACIDAD_MAXIMA_COLA) * 100}%`;
+        }
+
+        function renderizarCola() {
+            const contenedor = document.getElementById('contenedor-cola');
+            contenedor.innerHTML = '';
+            actualizarEstadisticasCola();
+
+            if (cola.length === 0) {
+                contenedor.innerHTML = `<div class="text-center text-slate-500 text-sm py-10 w-full"><i class="fa-solid fa-people-line text-3xl mb-2 block"></i>La cola está vacía. ¡Encola un elemento!</div>`;
+                return;
+            }
+
+            cola.forEach((valor, idx) => {
+                const nodoDiv = document.createElement('div');
+                nodoDiv.className = "flex items-center space-x-3 animate-slide-in flex-shrink-0";
+                nodoDiv.innerHTML = `
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3 shadow-lg flex flex-col min-w-[110px]">
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-700/60 pb-1 mb-1">
+                            <span>Pos: ${idx}</span>
+                            <span class="text-blue-400 font-bold">${idx === 0 ? 'FRENTE' : (idx === cola.length - 1 ? 'FINAL' : '')}</span>
+                        </div>
+                        <div class="text-center py-2">
+                            <span class="text-2xl font-bold text-white">${valor}</span>
+                        </div>
+                    </div>
+                    ${idx < cola.length - 1 ? '<i class="fa-solid fa-arrow-right text-slate-600 text-sm"></i>' : ''}
+                `;
+                contenedor.appendChild(nodoDiv);
+            });
+        }
+
+        function colaEncolar() {
+            let val = parseInt(document.getElementById('cola-input-push').value);
+            if (isNaN(val)) { mostrarToast('Ingresa un número válido', 'error'); return; }
+            if (cola.length >= CAPACIDAD_MAXIMA_COLA) { mostrarToast('Cola Llena (Máx 5)', 'error'); return; }
+            cola.push(val);
+            document.getElementById('cola-input-push').value = '';
+            mostrarToast(`Número ${val} encolado`, 'success');
+            renderizarCola();
+        }
+
+        function colaDesencolar() {
+            if (cola.length === 0) { mostrarToast('La cola está vacía', 'error'); return; }
+            let eliminado = cola.shift();
+            mostrarToast(`Se quitó el número: ${eliminado}`, 'success');
+            renderizarCola();
+        }
+
+        function colaMostrar() {
+            if (cola.length === 0) mostrarToast('La cola está vacía', 'error');
+            else mostrarToast(`Elementos en la cola: [${cola.join(', ')}]`, 'success');
+        }
+
+        function colaAdicionarPorPosicion() {
+            let pos = parseInt(document.getElementById('cola-pos-idx').value);
+            let val = parseInt(document.getElementById('cola-pos-val').value);
+            if (isNaN(pos) || isNaN(val)) { mostrarToast('Ingresa posición y valor', 'error'); return; }
+            if (cola.length >= CAPACIDAD_MAXIMA_COLA) { mostrarToast('Cola Llena', 'error'); return; }
+            if (pos >= 0 && pos <= cola.length) {
+                cola.splice(pos, 0, val);
+                document.getElementById('cola-pos-idx').value = '';
+                document.getElementById('cola-pos-val').value = '';
+                mostrarToast('Número Agregado', 'success');
+                renderizarCola();
+            } else { mostrarToast('Posición no válida', 'error'); }
+        }
+
+        function colaAdicionarPorValor() {
+            let buscar = parseInt(document.getElementById('cola-val-buscar').value);
+            let nuevo = parseInt(document.getElementById('cola-val-nuevo').value);
+            if (isNaN(buscar) || isNaN(nuevo)) { mostrarToast('Ingresa ambos valores', 'error'); return; }
+            if (cola.length >= CAPACIDAD_MAXIMA_COLA) { mostrarToast('Cola Llena', 'error'); return; }
+            let idx = cola.indexOf(buscar);
+            if (idx !== -1) {
+                cola.splice(idx + 1, 0, nuevo);
+                document.getElementById('cola-val-buscar').value = '';
+                document.getElementById('cola-val-nuevo').value = '';
+                mostrarToast('Número agregado', 'success');
+                renderizarCola();
+            } else { mostrarToast('Ese número no está en la cola', 'error'); }
+        }
+
+        function colaEliminarPorPosicion() {
+            let pos = parseInt(document.getElementById('cola-del-pos').value);
+            if (isNaN(pos) || pos < 0 || pos >= cola.length) { mostrarToast('Posición No Existe', 'error'); return; }
+            cola.splice(pos, 1);
+            document.getElementById('cola-del-pos').value = '';
+            mostrarToast('Elemento borrado', 'success');
+            renderizarCola();
+        }
+
+        function colaEliminarPorValor() {
+            let val = parseInt(document.getElementById('cola-del-val').value);
+            let idx = cola.indexOf(val);
+            if (idx !== -1) {
+                cola.splice(idx, 1);
+                document.getElementById('cola-del-val').value = '';
+                mostrarToast('Número eliminado', 'success');
+                renderizarCola();
+            } else { mostrarToast('El número no existe', 'error'); }
+        }
+
+        function reiniciarCola() {
+            cola = [];
+            mostrarToast('Cola reiniciada', 'info');
+            renderizarCola();
+        }
+
+
+        // --- 6. NAVEGACIÓN ENTRE MÓDULOS ---
+        function cambiarEstructura(tipo) {
+            const btnPila = document.getElementById('btn-pila');
+            const btnSimple = document.getElementById('btn-simple');
+            const btnDoble = document.getElementById('btn-doble');
+            const btnCircular = document.getElementById('btn-circular');
+            const btnCola = document.getElementById('btn-cola');
+            
+            const vistaPila = document.getElementById('vista-pila');
+            const vistaSimple = document.getElementById('vista-simple');
+            const vistaDoble = document.getElementById('vista-doble');
+            const vistaCircular = document.getElementById('vista-circular');
+            const vistaCola = document.getElementById('vista-cola');
+            const vistaFutura = document.getElementById('vista-futura');
+            
+            const labelCapacidad = document.getElementById('label-capacidad');
+            const valCapacidad = document.getElementById('val-capacidad');
+
+            [btnPila, btnSimple, btnDoble, btnCircular, btnCola].forEach(b => {
+                b.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent hover:border-slate-800";
+            });
+
+            if (tipo === 'pila') {
+                btnPila.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                vistaPila.classList.remove('hidden');
+                vistaSimple.classList.add('hidden');
+                vistaDoble.classList.add('hidden');
+                vistaCircular.classList.add('hidden');
+                vistaCola.classList.add('hidden');
+                vistaFutura.classList.add('hidden');
+                labelCapacidad.innerText = "Límite:";
+                valCapacidad.innerText = "5 Elementos";
+                renderizarPila();
+            } else if (tipo === 'simple') {
+                btnSimple.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                vistaPila.classList.add('hidden');
+                vistaSimple.classList.remove('hidden');
+                vistaDoble.classList.add('hidden');
+                vistaCircular.classList.add('hidden');
+                vistaCola.classList.add('hidden');
+                vistaFutura.classList.add('hidden');
+                labelCapacidad.innerText = "Modo:";
+                valCapacidad.innerText = "Dinámico";
+                renderizarListaSimple();
+            } else if (tipo === 'doble') {
+                btnDoble.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                vistaPila.classList.add('hidden');
+                vistaSimple.classList.add('hidden');
+                vistaDoble.classList.remove('hidden');
+                vistaCircular.classList.add('hidden');
+                vistaCola.classList.add('hidden');
+                vistaFutura.classList.add('hidden');
+                labelCapacidad.innerText = "Modo:";
+                valCapacidad.innerText = "Doble Enlace";
+                renderizarListaDoble();
+            } else if (tipo === 'circular') {
+                btnCircular.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                vistaPila.classList.add('hidden');
+                vistaSimple.classList.add('hidden');
+                vistaDoble.classList.add('hidden');
+                vistaCircular.classList.remove('hidden');
+                vistaCola.classList.add('hidden');
+                vistaFutura.classList.add('hidden');
+                labelCapacidad.innerText = "Modo:";
+                valCapacidad.innerText = "Circular";
+                renderizarListaCircular();
+            } else if (tipo === 'cola') {
+                btnCola.className = "w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-medium transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30";
+                vistaPila.classList.add('hidden');
+                vistaSimple.classList.add('hidden');
+                vistaDoble.classList.add('hidden');
+                vistaCircular.classList.add('hidden');
+                vistaCola.classList.remove('hidden');
+                vistaFutura.classList.add('hidden');
+                labelCapacidad.innerText = "Límite:";
+                valCapacidad.innerText = "5 Elementos";
+                renderizarCola();
+            }
+        }
+
+        window.onload = function() {
+            renderizarPila();
+        };
+    </script>
+</body>
+</html>
